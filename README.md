@@ -11,7 +11,7 @@ Getting Started
 -Generate a new API key for mainnet access
 -Copy your Bearer token (format:edcdd09d-XXXX-XXXX-XXXX-XXXXXXXXXXXX)
 ```
-2. ## Create new Rust project
+2. Create new Rust project
 cargo new kaia_scan_project
 `cd kaia_scan_project`
 
@@ -24,7 +24,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 anyhow = "1.0"
 ```
-3. ## Configure SDK AUTH And Run the code
+3. Configure SDK AUTH And Run the code
 `cargo run --example basic`
 
 ## Test specific endpoints
