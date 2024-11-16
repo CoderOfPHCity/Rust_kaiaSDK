@@ -4,6 +4,7 @@ Getting Started
 
 1. Obtain API 
 
+```
 -Visit KaiaScan
 -Create an account or sign in
 -Navigate to API section in your profile
@@ -12,6 +13,7 @@ Getting Started
 2. ## Create new Rust project
 cargo new kaia_scan_project
 `cd kaia_scan_project`
+```
 
 ## Add dependencies to Cargo.toml
 ```
