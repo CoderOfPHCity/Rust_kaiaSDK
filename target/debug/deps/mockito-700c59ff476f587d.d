@@ -1,0 +1,13 @@
+/home/agantem/Desktop/RustSDK/rustsdk/target/debug/deps/libmockito-700c59ff476f587d.rmeta: /home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/lib.rs /home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/diff.rs /home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/error.rs /home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/matcher.rs /home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/mock.rs /home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/request.rs /home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/response.rs /home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/server.rs /home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/server_pool.rs
+
+/home/agantem/Desktop/RustSDK/rustsdk/target/debug/deps/mockito-700c59ff476f587d.d: /home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/lib.rs /home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/diff.rs /home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/error.rs /home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/matcher.rs /home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/mock.rs /home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/request.rs /home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/response.rs /home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/server.rs /home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/server_pool.rs
+
+/home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/lib.rs:
+/home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/diff.rs:
+/home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/error.rs:
+/home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/matcher.rs:
+/home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/mock.rs:
+/home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/request.rs:
+/home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/response.rs:
+/home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/server.rs:
+/home/agantem/.cargo/registry/src/index.crates.io-6f17d22bba15001f/mockito-1.6.1/src/server_pool.rs:
