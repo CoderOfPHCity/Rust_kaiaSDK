@@ -3,13 +3,19 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-const BASE_URL: &str = "https://mainnet-oapi.kaiascan.io/";
-const AUTH_TOKEN: &'static str = "edcdd09d-82c1-4056-963e-9f5a14f7d6cf";
-const CHAIN_ID: &str = "8217";
+
+const MAINNET_BASE_URL: &str = "https://mainnet-oapi.kaiascan.io/";
+const TESTNET_BASE_URL: &str = "https://kairos-oapi.kaiscan.io/";
+
+pub struct KaiaScan {
+    client: Client,
+    base_url: String,
+}
+
+const AUTH_TOKEN: &'static str = "";
 const TOKENS_ENDPOINT: &str = "api/v1/tokens";
 const NFTS_ENDPOINT: &str = "api/v1/nfts";
 
-// Custom type for blockchain addresses
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Address(String);
 
@@ -23,6 +29,119 @@ impl AsRef<str> for Address {
     fn as_ref(&self) -> &str {
         &self.0
     }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct AccountKeyHistory {
+    pub address: String,
+    pub key_type: String,
+    pub public_key: String,
+    pub created_at: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct AccountKeyHistoryResponse {
+    pub paging: Paging,
+    pub results: Vec<AccountKeyHistory>,
+}
+#[derive(Debug, Deserialize)]
+pub struct KlayPrice {
+    pub btc_price: String,
+    pub market_cap: String,
+    pub total_supply: String,
+    pub usd_price: String,
+    pub usd_price_changes: String,
+    pub volume: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct KaiaSummary {
+    pub avg_block_time1h: String,
+    pub avg_block_time24h: String,
+    pub avg_tx_per_block24h: f64,
+    pub consensus_node: i32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct KaiaInfoResponse {
+    pub klay_price: KlayPrice,
+    pub summary: KaiaSummary,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct BlockRewardRecipient {
+    pub address: String,
+    pub amount: String,
+    pub name: String,
+    #[serde(rename = "type")]
+    pub reward_type: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct BlockRewardDistribution {
+    pub amount: String,
+    #[serde(rename = "type")]
+    pub distribution_type: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct BlockRewardsResponse {
+    pub burnt_fee: String,
+    pub distributions: Vec<BlockRewardDistribution>,
+    pub minted: String,
+    pub recipients: Vec<BlockRewardRecipient>,
+    pub total_fee: String,
+}
+
+// #[derive(Debug, Deserialize)]
+// pub struct BlockBurns {
+//     pub block_id: i64,
+//     pub amount: String,
+//     pub datetime: String,
+// }
+#[derive(Debug, Deserialize)]
+pub struct BurnSummary {
+    pub accumulate_burnt: String,
+    pub accumulate_burnt_fees: String,
+    pub accumulate_burnt_kaia: String,
+    pub kip103_burnt: String,
+    pub kip160_burnt: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct BlockBurns {
+    pub block_id: i64,
+    pub amount: String,
+    pub datetime: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct BlockRewards {
+    pub block_id: i64,
+    pub rewards: Vec<BlockRewardDetail>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct BlockRewardDetail {
+    pub address: String,
+    pub amount: String,
+    pub reward_type: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct InternalTransaction {
+    pub block_id: i64,
+    pub transaction_hash: String,
+    pub from: String,
+    pub to: String,
+    pub value: String,
+    pub datetime: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct InternalTransactionsResponse {
+    pub paging: Paging,
+    pub results: Vec<InternalTransaction>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -143,27 +262,55 @@ pub struct TokenInfo {
     pub total_burns: i64,
 }
 
-pub struct KaiaScan {
-    client: Client,
+#[derive(Debug, Deserialize)]
+pub struct BlocksListResponse {
+    pub paging: Paging,
+    pub results: Vec<BlockListItem>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct BlockListItem {
+    #[serde(rename = "base_fee_per_gas")]
+    pub base_fee_per_gas: String,
+    #[serde(rename = "block_id")]
+    pub block_id: i64,
+    #[serde(rename = "block_proposer")]
+    pub block_proposer: String,
+    #[serde(rename = "block_size")]
+    pub block_size: i64,
+    #[serde(rename = "burnt_fees")]
+    pub burnt_fees: String,
+    pub datetime: String,
+    pub reward: String,
+    #[serde(rename = "total_transaction_count")]
+    pub total_transaction_count: i64,
 }
 
 impl KaiaScan {
-    pub fn new() -> Result<Self> {
+    pub fn new(is_testnet: bool) -> Result<Self> {
+        let base_url = if is_testnet {
+            TESTNET_BASE_URL.to_string()
+        } else {
+            MAINNET_BASE_URL.to_string()
+        };
+
         let client = Client::builder()
             .timeout(Duration::from_secs(10))
             .build()
             .context("Failed to create HTTP client")?;
 
-        Ok(Self { client })
+        Ok(Self { client, base_url })
     }
 
     async fn fetch_api<T>(&self, url: &str) -> Result<T>
     where
         T: for<'de> Deserialize<'de> + std::fmt::Debug,
     {
+        let _url = format!("{}{}", self.base_url, url);
+
         let response = self
             .client
-            .get(url)
+            .get(_url)
             .header("Accept", "*/*")
             .header("Authorization", format!("Bearer {}", AUTH_TOKEN))
             .send()
@@ -182,7 +329,7 @@ impl KaiaScan {
     }
 
     pub async fn get_fungible_token(&self, token_address: Address) -> Result<TokenInfo> {
-        let url = format!("{}{}/{}", BASE_URL, TOKENS_ENDPOINT, token_address.as_ref());
+        let url = format!("{}/{}", TOKENS_ENDPOINT, token_address.as_ref());
         self.fetch_api(&url).await
     }
 
@@ -192,8 +339,7 @@ impl KaiaScan {
         token_id: &str,
     ) -> Result<serde_json::Value> {
         let url = format!(
-            "{}{}?nftAddress={}&tokenId={}",
-            BASE_URL,
+            "{}?nftAddress={}&tokenId={}",
             NFTS_ENDPOINT,
             nft_address.as_ref(),
             token_id
@@ -205,34 +351,55 @@ impl KaiaScan {
         &self,
         contract_address: Address,
     ) -> Result<serde_json::Value> {
-        let url = format!(
-            "{}api/v1/contracts/creation-code?contractAddress={}",
-            BASE_URL,
+        let endpoint = format!(
+            "api/v1/contracts/creation-code?contractAddress={}",
             contract_address.as_ref()
         );
-        self.fetch_api(&url).await
+        self.fetch_api(&endpoint).await
     }
-
     pub async fn get_latest_block(&self) -> Result<LatestBlock> {
-        let url = format!("{}api/v1/blocks/latest", BASE_URL);
+        let url = format!("api/v1/blocks/latest");
         self.fetch_api(&url).await
     }
 
     pub async fn get_block(&self, block_number: i64) -> Result<BlockDetails> {
-        let url = format!("{}api/v1/blocks?blockNumber={}", BASE_URL, block_number);
+        let url = format!("api/v1/blocks?blockNumber={}", block_number);
         self.fetch_api(&url).await
     }
 
-    pub async fn get_blocks(&self) -> Result<BlocksResponse> {
-        let url = format!("{}api/v1/blocks", BASE_URL);
-        self.fetch_api(&url).await
+    pub async fn get_blocks(
+        &self,
+        block_number: i64,
+        block_number_start: Option<i64>,
+        block_number_end: Option<i64>,
+        page: Option<i32>,
+        size: Option<i32>,
+    ) -> Result<BlocksListResponse> {
+        let page = page.unwrap_or(1).max(1);
+        let size = size.unwrap_or(20).clamp(1, 2000);
+    
+        let mut query_params = vec![format!("blockNumber={}", block_number)];
+    
+        if let Some(start) = block_number_start {
+            query_params.push(format!("blockNumberStart={}", start));
+        }
+    
+        if let Some(end) = block_number_end {
+            query_params.push(format!("blockNumberEnd={}", end));
+        }
+    
+        query_params.push(format!("page={}", page));
+        query_params.push(format!("size={}", size));
+    
+        let endpoint = format!("api/v1/blocks?{}", query_params.join("&"));
+        self.fetch_api(&endpoint).await
     }
 
     pub async fn get_transactions_of_block(
         &self,
         block_number: i64,
     ) -> Result<TransactionsResponse> {
-        let url = format!("{}api/v1/blocks/{}/transactions", BASE_URL, block_number);
+        let url = format!("api/v1/blocks/{}/transactions", block_number);
         self.fetch_api(&url).await
     }
 
@@ -241,14 +408,14 @@ impl KaiaScan {
         transaction_hash: &str,
     ) -> Result<TransactionReceiptStatus> {
         let url = format!(
-            "{}api/v1/transaction-receipts/status?transactionHash={}",
-            BASE_URL, transaction_hash
+            "api/v1/transaction-receipts/status?transactionHash={}",
+            transaction_hash
         );
         self.fetch_api(&url).await
     }
 
     pub async fn get_transaction(&self, transaction_hash: &str) -> Result<TransactionDetails> {
-        let url = format!("{}api/v1/transactions/{}", BASE_URL, transaction_hash);
+        let url = format!("api/v1/transactions/{}", transaction_hash);
         self.fetch_api(&url).await
     }
 
@@ -257,10 +424,102 @@ impl KaiaScan {
         contract_address: Address,
     ) -> Result<ContractSourceCode> {
         let url = format!(
-            "{}api/v1/contracts/source-code?contractAddress={}",
-            BASE_URL,
+            "api/v1/contracts/source-code?contractAddress={}",
             contract_address.as_ref()
         );
+        self.fetch_api(&url).await
+    }
+
+    pub async fn get_account_key_histories(
+        &self,
+        account_address: &str,
+        page: Option<i32>,
+        size: Option<i32>,
+    ) -> Result<AccountKeyHistoryResponse> {
+        let page = page.unwrap_or(1);
+        let size = size.unwrap_or(20);
+
+        if page < 1 {
+            return Err(anyhow::anyhow!("Page must be >= 1"));
+        }
+        if size < 1 || size > 2000 {
+            return Err(anyhow::anyhow!("Size must be between 1 and 2000"));
+        }
+
+        let url = format!(
+            "api/v1/accounts/{}/key-histories?page={}&size={}",
+            account_address, page, size
+        );
+        self.fetch_api(&url).await
+    }
+
+    pub async fn get_kaia_info(&self) -> Result<KaiaInfoResponse> {
+        let url = format!("api/v1/kaia");
+        self.fetch_api(&url).await
+    }
+
+    pub async fn get_latest_block_burns(
+        &self,
+        page: Option<i32>,
+        size: Option<i32>,
+    ) -> Result<BurnSummary> {
+        let page = page.unwrap_or(1);
+        let size = size.unwrap_or(20);
+
+        if page < 1 {
+            return Err(anyhow::anyhow!("Page must be >= 1"));
+        }
+        if size < 1 || size > 2000 {
+            return Err(anyhow::anyhow!("Size must be between 1 and 2000"));
+        }
+
+        let url = format!("api/v1/blocks/latest/burns?page={}&size={}", page, size);
+        self.fetch_api(&url).await
+    }
+
+    pub async fn get_latest_block_rewards(&self, block_number: i64) -> Result<BlockRewards> {
+        let url = format!("api/v1/blocks/latest/rewards?blockNumber={}", block_number);
+        self.fetch_api(&url).await
+    }
+
+    pub async fn get_block_burns(&self, block_number: i64) -> Result<BurnSummary> {
+        let url = format!("api/v1/blocks/{}/burns", block_number);
+        self.fetch_api(&url).await
+    }
+
+    pub async fn get_block_rewards(&self, block_number: i64) -> Result<BlockRewardsResponse> {
+        let url = format!("api/v1/blocks/{}/rewards", block_number);
+        self.fetch_api(&url).await
+    }
+
+    pub async fn get_internal_transactions_of_block(
+        &self,
+        block_number: i64,
+        page: Option<i32>,
+        size: Option<i32>,
+    ) -> Result<InternalTransactionsResponse> {
+        let page = page.unwrap_or(1);
+        let size = size.unwrap_or(20);
+
+        if page < 1 {
+            return Err(anyhow::anyhow!("Page must be >= 1"));
+        }
+        if size < 1 || size > 2000 {
+            return Err(anyhow::anyhow!("Size must be between 1 and 2000"));
+        }
+
+        let url = format!(
+            "api/v1/blocks/{}/internal-transactions?page={}&size={}",
+            block_number, page, size
+        );
+        self.fetch_api(&url).await
+    }
+
+    pub async fn get_transaction_status(
+        &self,
+        transaction_hash: &str,
+    ) -> Result<TransactionStatus> {
+        let url = format!("api/v1/transactions/{}/status", transaction_hash);
         self.fetch_api(&url).await
     }
 }
